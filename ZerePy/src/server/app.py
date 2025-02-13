@@ -9,6 +9,7 @@ import threading
 from pathlib import Path
 from src.cli import ZerePyCLI
 from fastapi.middleware.cors import CORSMiddleware
+from src.connections.goat_connection import GoatConnection
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("server/app")
@@ -72,6 +73,13 @@ class ServerState:
             if self.agent_task:
                 self.agent_task.join(timeout=5)
             self.agent_running = False
+
+    def get_goat_connection(self) -> Optional[GoatConnection]:
+        """Helper method to get GOAT connection from current agent"""
+        if not self.cli.agent:
+            return None
+        return self.cli.agent.connection_manager.connections.get('goat')
+
 
 class ZerePyServer:
     def __init__(self):
@@ -145,29 +153,30 @@ class ZerePyServer:
 
         @self.app.post("/agent/action")
         async def agent_action(action_request: ActionRequest):
-            """Execute a single agent action"""
             try:
-                # Log the incoming request payload
                 logger.info(f"Incoming request payload: {action_request.dict()}")
-
+                
                 if not self.state.cli.agent:
                     raise HTTPException(status_code=400, detail="No agent loaded")
-
-                # Log the params separately
-                logger.info(f"Params received: {action_request.params}")
-
-                # Convert params to expected format
-                params = action_request.params or {}
-
+                    
+                connection = self.state.cli.agent.connection_manager.connections.get(action_request.connection)
+                if not connection:
+                    raise HTTPException(status_code=404, detail=f"Connection {action_request.connection} not found")
+                    
+                # Run the action in a thread pool since it's synchronous
                 result = await asyncio.to_thread(
-                    self.state.cli.agent.perform_action,
-                    connection=action_request.connection,
-                    action=action_request.action,
-                    params=params
+                    connection.perform_action,
+                    action_request.action,
+                    **action_request.params
                 )
+                
+                if result is None:
+                    raise HTTPException(status_code=500, detail="Action returned None")
+                    
                 return {"status": "success", "result": result}
+                
             except Exception as e:
-                logger.error(f"Action failed: {str(e)}")  # Ensure this logs the full error
+                logger.error(f"Action failed: {str(e)}", exc_info=True)
                 raise HTTPException(status_code=500, detail=str(e))
             
         @self.app.post("/agent/chat")
@@ -238,23 +247,28 @@ class ZerePyServer:
         async def list_connection_actions(name: str):
             """List actions for a specific connection"""
             try:
-                # Ensure an agent is loaded
                 if not self.state.cli.agent:
-                    raise HTTPException(status_code=400, detail="No agent loaded. Please load an agent first.")
+                    raise HTTPException(status_code=400, detail="No agent loaded")
 
-                # Get the connection by name
                 connection = self.state.cli.agent.connection_manager.connections.get(name)
                 if not connection:
                     raise HTTPException(status_code=404, detail=f"Connection {name} not found")
 
-                # List actions for the connection
-                actions = connection.list_actions()  # Call the list_actions method
+                # For GOAT connection, ensure it's configured before listing actions
+                if name == 'goat':
+                    if not connection.is_configured(verbose=True):
+                        raise HTTPException(
+                            status_code=400, 
+                            detail="GOAT connection not configured. Please configure it first."
+                        )
+
+                actions = connection.list_actions()
                 return {"status": "success", "actions": actions}
             except HTTPException as e:
-                raise e  # Re-raise HTTPException to return the appropriate status code and detail
+                raise e
             except Exception as e:
                 logger.error(f"Error listing actions for connection {name}: {str(e)}")
-                raise HTTPException(status_code=500, detail="An error occurred while processing your request.")
+                raise HTTPException(status_code=500, detail=str(e))
     
 
 

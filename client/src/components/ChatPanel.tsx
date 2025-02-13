@@ -41,6 +41,10 @@ class ZerePyFrontendClient {
     return await this._fetchData(`/connections/${connectionId}/actions`);
   }
 
+  async listGoatActions(): Promise<any> {
+    return await this.listActions("goat");
+  }
+
   async listSonicActions(): Promise<any> {
     return await this.listActions("sonic");
   }
@@ -64,8 +68,27 @@ class ZerePyFrontendClient {
    * Get the balance of $S or a specific token.
    * @returns A promise resolving to the balance information.
    */
-  async getBalance(): Promise<any> {
-    return await this.performAction("sonic", "get-balance");
+  async getBalance(address: string): Promise<any> {
+    const actions = await this.listGoatActions();
+    const balanceAction = actions?.actions?.find(
+      (a: any) => a.name === "get_balance"
+    );
+
+    // Log the expected parameters
+    console.log("Expected parameters:", balanceAction?.parameters);
+
+    return await this.performAction("goat", "get_balance", {
+      // Use the correct parameter name from the action definition
+      [balanceAction?.parameters[0].name]: address,
+    });
+  }
+
+  async getAddress(): Promise<any> {
+    return await this.performAction("goat", "get_address");
+  }
+
+  async getChain(): Promise<any> {
+    return await this.performAction("goat", "get_chain");
   }
 
   /**
@@ -186,6 +209,8 @@ class ZerePyFrontendClient {
   }
 }
 
+
+
 // ==================== Example Usage ====================
 
 const client = new ZerePyFrontendClient("http://localhost:8000");
@@ -197,7 +222,7 @@ client.loadAgent("example").then((response) => {
 
 // Get balance
 client
-  .getBalance()
+  .getBalance("0x1be9C7c5E544Bb78Be030b2A2B66661cF32E7290")
   .then((response) => {
     console.log("Balance:", response.result);
   })
@@ -205,25 +230,59 @@ client
     console.error("Error getting balance:", error);
   });
 
-// Transfer tokens
-client
-  .transfer("0xRecipientAddress", "100", "0xTokenAddress")
-  .then((response) => {
-    console.log("Transfer Result:", response.result);
-  })
-  .catch((error) => {
-    console.error("Error transferring tokens:", error);
-  });
+  
+  client
+    .getAddress()
+    .then((response) => {
+      console.log("Address:", response.result);
+    })
+    .catch((error) => {
+      console.error("Error getting balance:", error);
+    });
 
-// Swap tokens
-client
-  .swap("0xTokenInAddress", "0xTokenOutAddress", "50", 1.0)
-  .then((response) => {
-    console.log("Swap Result:", response.result);
-  })
-  .catch((error) => {
-    console.error("Error swapping tokens:", error);
-  });
+
+  client
+    .getChain()
+    .then((response) => {
+      console.log("Chain:", response.result);
+    })
+    .catch((error) => {
+      console.error("Error getting chain:", error);
+    });
+
+
+
+// client
+//   .getGoatBalance("0x1be9C7c5E544Bb78Be030b2A2B66661cF32E7290")
+//   .then((response) => {
+//     console.log("From Goat Balance:", response.result);
+//   })
+//   .catch((error) => {
+//     console.error("Error getting balance:", error);
+//   });
+
+
+
+
+// // Transfer tokens
+// client
+//   .transfer("0xRecipientAddress", "100", "0xTokenAddress")
+//   .then((response) => {
+//     console.log("Transfer Result:", response.result);
+//   })
+//   .catch((error) => {
+//     console.error("Error transferring tokens:", error);
+//   });
+
+// // Swap tokens
+// client
+//   .swap("0xTokenInAddress", "0xTokenOutAddress", "50", 1.0)
+//   .then((response) => {
+//     console.log("Swap Result:", response.result);
+//   })
+//   .catch((error) => {
+//     console.error("Error swapping tokens:", error);
+//   });
 
 client
   .listSonicActions()
@@ -234,14 +293,24 @@ client
     console.error("Error listing Sonic actions:", error);
   });
 
-client
-  .listTwitterActions()
-  .then((response) => {
-    console.log("Twitter Actions:", response.actions);
-  })
-  .catch((error) => {
-    console.error("Error listing Twitter actions:", error);
-  });
+  client
+    .listGoatActions()
+    .then((response) => {
+      console.log("Goat Actions:", response.actions);
+    })
+    .catch((error) => {
+      console.error("Error listing Sonic actions:", error);
+    });
+
+
+// client
+//   .listTwitterActions()
+//   .then((response) => {
+//     console.log("Twitter Actions:", response.actions);
+//   })
+//   .catch((error) => {
+//     console.error("Error listing Twitter actions:", error);
+//   });
 
 // // Example usage of chatWithAgent
 // client.chatWithAgent("What is the capital of France?")

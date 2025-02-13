@@ -19,27 +19,46 @@ logger = logging.getLogger("connections.goat_connection")
 
 class GoatConnectionError(Exception):
     """Base exception for Goat connection errors"""
-
     pass
 
 
 class GoatConfigurationError(GoatConnectionError):
     """Raised when there are configuration/credential issues"""
-
     pass
 
 
 class GoatConnection(BaseConnection):
     def __init__(self, config: Dict[str, Any]):
         logger.info("🐐 Initializing Goat connection...")
-
         self._is_configured = False
         self._wallet_client: WalletClientBase | None = None
         self._plugins: Dict[str, PluginBase] = {}
         self._action_registry: Dict[str, ToolBase] = {}
-        self._config = self.validate_config(
-            config
-        )  # Store config but don't register actions yet
+        self._config = self.validate_config(config)
+        self.actions = {}  # Initialize actions dict
+
+    def list_actions(self) -> List[Dict[str, Any]]:
+        """List available actions for the Goat connection"""
+        if not self.is_configured(verbose=True):
+            return []
+            
+        actions = []
+        for action_name, action in self.actions.items():
+            action_info = {
+                "name": action.name,
+                "description": action.description,
+                "parameters": [
+                    {
+                        "name": param.name,
+                        "required": param.required,
+                        "type": param.type.__name__,
+                        "description": param.description
+                    }
+                    for param in action.parameters
+                ]
+            }
+            actions.append(action_info)
+        return actions
 
     def _resolve_type(self, raw_value: str, module) -> Any:
         """Resolve a type from a string, either from plugin module or fully qualified path"""
@@ -232,34 +251,29 @@ class GoatConnection(BaseConnection):
 
         return config
 
-    def _register_actions_with_wallet(self) -> None:
-        """Register actions with the current wallet client"""
-        self.actions = {}  # Clear existing actions
-        self._action_registry = {}  # Clear existing registry
-
-        tools = get_tools(self._wallet_client, list(self._plugins.values()))  # type: ignore
-
-        for tool in tools:
-            action_parameters = self._convert_pydantic_to_action_parameters(
-                tool.parameters
-            )
-
-            self.actions[tool.name] = Action(  # type: ignore
-                name=tool.name,
-                description=tool.description,
-                parameters=action_parameters,
-            )
-            self._action_registry[tool.name] = tool
-
-            register_action(tool.name)(
-                lambda agent, tool_name=tool.name, **kwargs: self.perform_action(
-                    tool_name, **kwargs
-                )
-            )
 
     def register_actions(self) -> None:
         """Initial action registration - deferred until wallet is configured"""
         pass  # We'll register actions after wallet configuration
+
+    def list_actions(self) -> List[Dict[str, Any]]:
+        """List available actions for the Goat connection"""
+        actions = []
+        for action_name, action in self.actions.items():
+            action_info = {
+                "name": action.name,
+                "description": action.description,
+                "parameters": [
+                    {
+                        "name": param.name,
+                        "required": param.required,
+                        "description": param.description
+                    }
+                    for param in action.parameters
+                ]
+            }
+            actions.append(action_info)
+        return actions
 
     def _create_wallet(self) -> bool:
         """Create wallet from environment variables"""
@@ -393,11 +407,73 @@ class GoatConnection(BaseConnection):
             logger.error(error_msg)
             raise GoatConfigurationError(error_msg)
 
-    def perform_action(self, action_name: str, **kwargs) -> Any:
-        """Execute a GOAT action using a plugin's tool"""
+    def perform_action(self, action_name: str, agent=None, **kwargs) -> Any:
+        """
+        Execute an action with improved error handling and parameter validation
+        """
+        if not self.is_configured(verbose=True):
+            raise GoatConnectionError("GOAT connection is not configured")
+        
+        # Validate action exists
         action = self.actions.get(action_name)
         if not action:
-            raise KeyError(f"Unknown action: {action_name}")
+            raise GoatConnectionError(f"Unknown action: {action_name}")
 
-        tool = self._action_registry[action_name]
-        return tool.execute(kwargs)
+        tool = self._action_registry.get(action_name)
+        if not tool:
+            raise GoatConnectionError(f"Tool not found for action: {action_name}")
+
+        try:
+            # Log incoming parameters for debugging
+            logger.debug(f"Executing {action_name} with params: {kwargs}")
+            
+            # Validate parameters against action requirements
+            missing_params = []
+            for param in action.parameters:
+                if param.required and param.name not in kwargs:
+                    missing_params.append(param.name)
+            
+            if missing_params:
+                raise GoatConnectionError(f"Missing required parameters: {', '.join(missing_params)}")
+
+            # Execute the tool with parameters
+            result = tool.execute(kwargs)
+            
+            # Log the result for debugging
+            logger.debug(f"Action {action_name} result: {result}")
+            
+            if result is None:
+                raise GoatConnectionError(f"Action {action_name} returned None")
+                
+            return result
+
+        except Exception as e:
+            logger.error(f"Error executing action {action_name}: {str(e)}")
+            raise GoatConnectionError(f"Failed to execute {action_name}: {str(e)}")
+
+    def _register_actions_with_wallet(self) -> None:
+        """Register actions with the current wallet client"""
+        self.actions = {}  # Clear existing actions
+        self._action_registry = {}  # Clear existing registry
+
+        tools = get_tools(self._wallet_client, list(self._plugins.values()))
+
+        for tool in tools:
+            action_parameters = self._convert_pydantic_to_action_parameters(
+                tool.parameters
+            )
+
+            self.actions[tool.name] = Action(
+                name=tool.name,
+                description=tool.description,
+                parameters=action_parameters,
+            )
+            self._action_registry[tool.name] = tool
+
+            # Fixed action registration to properly handle all parameters
+            def create_action_handler(tool_name):
+                def handler(**params):  # Remove agent parameter
+                    return self.perform_action(tool_name, **params)
+                return handler
+
+            register_action(tool.name)(create_action_handler(tool.name))
