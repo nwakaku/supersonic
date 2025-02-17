@@ -461,9 +461,12 @@ class SonicConnection(BaseConnection):
         except Exception as e:
             logger.error(f"Swap failed: {e}")
             raise
-    def perform_action(self, action_name: str, kwargs) -> Any:
+    def perform_action(self, action_name: str, **kwargs) -> Any:
         """Execute a Sonic action with validation"""
-        if action_name not in self.actions:
+        # Normalize action name (replace underscores with hyphens)
+        normalized_action_name = action_name.replace('_', '-')
+        
+        if normalized_action_name not in self.actions:
             raise KeyError(f"Unknown action: {action_name}")
 
         load_dotenv()
@@ -471,11 +474,11 @@ class SonicConnection(BaseConnection):
         if not self.is_configured(verbose=True):
             raise SonicConnectionError("Sonic is not properly configured")
 
-        action = self.actions[action_name]
+        action = self.actions[normalized_action_name]
         errors = action.validate_params(kwargs)
         if errors:
             raise ValueError(f"Invalid parameters: {', '.join(errors)}")
 
-        method_name = action_name.replace('-', '_')
+        method_name = normalized_action_name.replace('-', '_')
         method = getattr(self, method_name)
         return method(**kwargs)

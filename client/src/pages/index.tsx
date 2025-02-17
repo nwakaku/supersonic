@@ -42,17 +42,12 @@ export default function IndexPage() {
 
   const [isExpanded, setIsExpanded] = useState();
 
-  
+
   return (
     <DefaultLayout>
-      <main className="max-w-7xl mx-auto p-4 space-y-4">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-          <UserInfoPanel
-            isExpanded={isExpanded}
-            setIsExpanded={setIsExpanded}
-          />
+      <main className="max-w-7xl mx-auto p-4 space-y-1">
+        
           <ChatPanel />
-        </div>
       </main>
     </DefaultLayout>
   );

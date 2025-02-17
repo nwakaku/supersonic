@@ -1,5 +1,4 @@
-from fastapi import FastAPI, HTTPException, BackgroundTasks
-
+from fastapi import FastAPI, HTTPException, BackgroundTasks, Request
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 import logging
@@ -10,6 +9,7 @@ from pathlib import Path
 from src.cli import ZerePyCLI
 from fastapi.middleware.cors import CORSMiddleware
 from src.connections.goat_connection import GoatConnection
+import requests 
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("server/app")
@@ -18,6 +18,10 @@ class ActionRequest(BaseModel):
     connection: str
     action: str
     params: Optional[Dict[str, Any]] = {}
+
+class ConnectionRequest(BaseModel):
+    """Request model for proxy list actions"""
+    connectionId: str
 
 class ConfigureRequest(BaseModel):
     """Request model for configuring connections"""
@@ -87,12 +91,20 @@ class ZerePyServer:
 
          # Add CORS middleware properly within the class initialization
         self.app.add_middleware(
-            CORSMiddleware,
-            allow_origins=["http://localhost:5174"],  # Frontend URL
-            allow_credentials=True,
-            allow_methods=["*"],  # Allow all methods
-            allow_headers=["*"],  # Allow all headers
-        )
+        CORSMiddleware,
+        allow_origins=["*"],  # Allow all origins for testing
+        allow_credentials=True,
+        allow_methods=["*"],  # Allow all methods
+        allow_headers=["*"],  # Allow all headers
+    )
+        
+         # Middleware to inject the ngrok-skip-browser-warning header
+        @self.app.middleware("http")
+        async def inject_ngrok_header(request: Request, call_next):
+            response = await call_next(request)
+            # Add the ngrok-skip-browser-warning header to the response
+            response.headers["ngrok-skip-browser-warning"] = "true"
+            return response
         
 
         self.state = ServerState()
@@ -122,17 +134,37 @@ class ZerePyServer:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 
-        @self.app.post("/agents/{name}/load")
-        async def load_agent(name: str):
-            """Load a specific agent"""
+
+        @self.app.post("/retell/load-agent")
+        async def load_agent(request: Request):
             try:
-                self.state.cli._load_agent_from_file(name)
+                    
+                # Get the post data and extract args
+                post_data = await request.json()
+                args = post_data.get("args", {})
+                agent_name = args.get("name")
+                
+                if not agent_name:
+                    logger.error("No agent name provided in args")
+                    return {"message": "error", "detail": "No agent name provided"}
+                    
+                # Log the incoming request
+                logger.info(f"Loading agent with name: {agent_name}")
+                
+                # Load the agent
+                self.state.cli._load_agent_from_file(agent_name)
+                
+                # Return success response
                 return {
-                    "status": "success",
-                    "agent": name
+                    "message": "success",
+                    "agent": agent_name
                 }
+                    
             except Exception as e:
-                raise HTTPException(status_code=400, detail=str(e))
+                logger.error(f"Failed to load agent: {str(e)}", exc_info=True)
+                return {"message": "error", "detail": str(e)}
+    
+
 
         @self.app.get("/connections")
         async def list_connections():
@@ -151,34 +183,66 @@ class ZerePyServer:
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
 
-        @self.app.post("/agent/action")
-        async def agent_action(action_request: ActionRequest):
+        @self.app.post("/retell/agent-action")
+        async def agent_action(request: Request):
             try:
-                logger.info(f"Incoming request payload: {action_request.dict()}")
+                # Log the incoming request
+                logger.info("Incoming request to /retell/agent-action")
                 
+                # Get the post data and extract args
+                post_data = await request.json()
+                args = post_data.get("args", {})
+                
+                # Extract required parameters from args
+                connection_name = args.get("connection")
+                action_name = args.get("action")
+                action_params = args.get("params", {})
+                
+                # Validate required parameters
+                if not connection_name or not action_name:
+                    logger.error("Missing required parameters: connection or action")
+                    return {"message": "error", "detail": "Missing required parameters: connection or action"}
+                
+                # Log the extracted parameters
+                logger.info(f"Processing action request: connection={connection_name}, action={action_name}, params={action_params}")
+                
+                # Validate agent is loaded
                 if not self.state.cli.agent:
-                    raise HTTPException(status_code=400, detail="No agent loaded")
-                    
-                connection = self.state.cli.agent.connection_manager.connections.get(action_request.connection)
+                    logger.error("No agent loaded")
+                    return {"message": "error", "detail": "No agent loaded"}
+                
+                # Get the connection
+                connection = self.state.cli.agent.connection_manager.connections.get(connection_name)
                 if not connection:
-                    raise HTTPException(status_code=404, detail=f"Connection {action_request.connection} not found")
-                    
-                # Run the action in a thread pool since it's synchronous
+                    logger.error(f"Connection {connection_name} not found")
+                    return {"message": "error", "detail": f"Connection {connection_name} not found"}
+                
+                # Run the action in a thread pool
                 result = await asyncio.to_thread(
                     connection.perform_action,
-                    action_request.action,
-                    **action_request.params
+                    action_name,
+                    **action_params
                 )
                 
+                # Validate result
                 if result is None:
-                    raise HTTPException(status_code=500, detail="Action returned None")
-                    
-                return {"status": "success", "result": result}
+                    logger.error("Action returned None")
+                    return {"message": "error", "detail": "Action returned None"}
                 
+                # Log the successful action execution
+                logger.info(f"Action executed successfully: connection={connection_name}, action={action_name}")
+                
+                # Convert result to string and return
+                return {
+                    "message": "success",
+                    "result": str(result)
+                }
+                    
             except Exception as e:
                 logger.error(f"Action failed: {str(e)}", exc_info=True)
-                raise HTTPException(status_code=500, detail=str(e))
-            
+                return {"message": "error", "detail": str(e)}
+
+
         @self.app.post("/agent/chat")
         async def agent_chat(chat_request: Dict[str, Any]):
             """Handle chat requests"""
@@ -247,30 +311,102 @@ class ZerePyServer:
         async def list_connection_actions(name: str):
             """List actions for a specific connection"""
             try:
+                # Log the incoming request
+                logger.info(f"Incoming request to list actions for connection: {name}")
+                
+                # Validate agent is loaded
                 if not self.state.cli.agent:
+                    logger.error("No agent loaded")
                     raise HTTPException(status_code=400, detail="No agent loaded")
 
+                # Get the connection
                 connection = self.state.cli.agent.connection_manager.connections.get(name)
                 if not connection:
+                    logger.error(f"Connection {name} not found")
                     raise HTTPException(status_code=404, detail=f"Connection {name} not found")
 
                 # For GOAT connection, ensure it's configured before listing actions
                 if name == 'goat':
                     if not connection.is_configured(verbose=True):
+                        logger.error("GOAT connection not configured")
                         raise HTTPException(
                             status_code=400, 
                             detail="GOAT connection not configured. Please configure it first."
                         )
 
+                # List actions for the connection
                 actions = connection.list_actions()
+                
+                # Log successful action listing
+                logger.info(f"Successfully listed actions for connection: {name}")
+                
                 return {"status": "success", "actions": actions}
+            
             except HTTPException as e:
+                # Re-raise HTTPException to return the appropriate response
                 raise e
             except Exception as e:
-                logger.error(f"Error listing actions for connection {name}: {str(e)}")
+                # Log the error and return a 500 response
+                logger.error(f"Error listing actions for connection {name}: {str(e)}", exc_info=True)
                 raise HTTPException(status_code=500, detail=str(e))
-    
 
+        @self.app.post("/proxy/connections/actions")
+        async def proxy_list_actions(request: Request):
+            """Proxy to allow Retell AI (POST) to internally perform a GET request"""
+            try:
+                # Log the incoming request
+                logger.info("Incoming request to /proxy/connections/actions")
+                
+                # Get the post data and extract args
+                post_data = await request.json()
+                args = post_data.get("args", {})
+                
+                # Extract the connection name from args
+                connection_name = args.get("connectionId")
+                
+                # Validate required parameters
+                if not connection_name:
+                    logger.error("Missing required parameter: connectionId")
+                    return {"message": "error", "detail": "Missing required parameter: connectionId"}
+                
+                # Log the extracted parameters
+                logger.info(f"Processing proxy request: connection={connection_name}")
+                
+                # Validate agent is loaded
+                if not self.state.cli.agent:
+                    logger.error("No agent loaded")
+                    return {"message": "error", "detail": "No agent loaded"}
+
+                # Get the connection
+                connection = self.state.cli.agent.connection_manager.connections.get(connection_name)
+                if not connection:
+                    logger.error(f"Connection {connection_name} not found")
+                    return {"message": "error", "detail": f"Connection {connection_name} not found"}
+
+                # For GOAT connection, ensure it's configured before listing actions
+                if connection_name == 'goat':
+                    if not connection.is_configured(verbose=True):
+                        logger.error("GOAT connection not configured")
+                        return {
+                            "message": "error",
+                            "detail": "GOAT connection not configured. Please configure it first."
+                        }
+
+                # List actions for the connection
+                actions = connection.list_actions()
+                
+                # Log successful action listing
+                logger.info(f"Successfully listed actions for connection: {connection_name}")
+                
+                return {
+                    "message": "success",
+                    "actions": actions
+                }
+            
+            except Exception as e:
+                # Log the error and return a 500 response
+                logger.error(f"Error listing actions for connection: {str(e)}", exc_info=True)
+                return {"message": "error", "detail": str(e)}
 
         @self.app.get("/connections/{name}/status")
         async def connection_status(name: str):

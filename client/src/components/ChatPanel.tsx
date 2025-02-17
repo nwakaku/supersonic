@@ -1,3 +1,5 @@
+/* eslint-disable no-console */
+//@ts-nocheck
 import { useState } from "react";
 
 class ZerePyFrontendClient {
@@ -83,6 +85,10 @@ class ZerePyFrontendClient {
     });
   }
 
+  async getSonicBalance(): Promise<any> {
+    return await this.performAction("sonic", "get_balance");
+  }
+
   async getAddress(): Promise<any> {
     return await this.performAction("goat", "get_address");
   }
@@ -104,7 +110,9 @@ class ZerePyFrontendClient {
     tokenAddress?: string
   ): Promise<any> {
     const params: Record<string, any> = { to_address: toAddress, amount };
+
     if (tokenAddress) params.token_address = tokenAddress;
+
     return await this.performAction("sonic", "transfer", params);
   }
 
@@ -127,7 +135,9 @@ class ZerePyFrontendClient {
       token_out: tokenOut,
       amount,
     };
+
     if (slippage) params.slippage = slippage;
+
     return await this.performAction("sonic", "swap", params);
   }
 
@@ -173,8 +183,10 @@ class ZerePyFrontendClient {
   private async _fetchData(endpoint: string): Promise<any> {
     try {
       const response = await fetch(`${this.baseUrl}${endpoint}`);
+
       if (!response.ok)
         throw new Error(`Error ${response.status}: ${response.statusText}`);
+
       return await response.json();
     } catch (error) {
       console.error(`Fetch error at ${endpoint}:`, error);
@@ -193,14 +205,19 @@ class ZerePyFrontendClient {
     data: Record<string, any> = {}
   ): Promise<any> {
     try {
-      console.log("Sending payload:", data); // Log the payload
+      console.log("Sending payload:", JSON.stringify(data, null, 2));
       const response = await fetch(`${this.baseUrl}${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
-      if (!response.ok)
-        throw new Error(`Error ${response.status}: ${response.statusText}`);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`Post error at ${endpoint}: ${errorText}`);
+        throw new Error(errorText);
+      }
+
       return await response.json();
     } catch (error) {
       console.error(`Post error at ${endpoint}:`, error);
@@ -208,8 +225,6 @@ class ZerePyFrontendClient {
     }
   }
 }
-
-
 
 // ==================== Example Usage ====================
 
@@ -230,59 +245,61 @@ client
     console.error("Error getting balance:", error);
   });
 
-  
-  client
-    .getAddress()
-    .then((response) => {
-      console.log("Address:", response.result);
-    })
-    .catch((error) => {
-      console.error("Error getting balance:", error);
-    });
+client
+  .getSonicBalance()
+  .then((response) => {
+    console.log("Sonic Balance:", response.result);
+  })
+  .catch((error) => {
+    console.error("Error getting balance:", error);
+  });
 
+client
+  .getAddress()
+  .then((response) => {
+    console.log("Address:", response.result);
+  })
+  .catch((error) => {
+    console.error("Error getting balance:", error);
+  });
 
-  client
-    .getChain()
-    .then((response) => {
-      console.log("Chain:", response.result);
-    })
-    .catch((error) => {
-      console.error("Error getting chain:", error);
-    });
+client
+  .getChain()
+  .then((response) => {
+    console.log("Chain:", response.result);
+  })
+  .catch((error) => {
+    console.error("Error getting chain:", error);
+  });
 
+client
+  .getGoatBalance("0x1be9C7c5E544Bb78Be030b2A2B66661cF32E7290")
+  .then((response) => {
+    console.log("From Goat Balance:", response.result);
+  })
+  .catch((error) => {
+    console.error("Error getting balance:", error);
+  });
 
+// Transfer tokens
+client
+  .transfer("0xRecipientAddress", "100", "0xTokenAddress")
+  .then((response) => {
+    console.log("Transfer Result:", response.result);
+  })
+  .catch((error) => {
+    console.error("Error transferring tokens:", error);
+  });
 
-// client
-//   .getGoatBalance("0x1be9C7c5E544Bb78Be030b2A2B66661cF32E7290")
-//   .then((response) => {
-//     console.log("From Goat Balance:", response.result);
-//   })
-//   .catch((error) => {
-//     console.error("Error getting balance:", error);
-//   });
-
-
-
-
-// // Transfer tokens
-// client
-//   .transfer("0xRecipientAddress", "100", "0xTokenAddress")
-//   .then((response) => {
-//     console.log("Transfer Result:", response.result);
-//   })
-//   .catch((error) => {
-//     console.error("Error transferring tokens:", error);
-//   });
-
-// // Swap tokens
-// client
-//   .swap("0xTokenInAddress", "0xTokenOutAddress", "50", 1.0)
-//   .then((response) => {
-//     console.log("Swap Result:", response.result);
-//   })
-//   .catch((error) => {
-//     console.error("Error swapping tokens:", error);
-//   });
+// Swap tokens
+client
+  .swap("0xTokenInAddress", "0xTokenOutAddress", "50", 1.0)
+  .then((response) => {
+    console.log("Swap Result:", response.result);
+  })
+  .catch((error) => {
+    console.error("Error swapping tokens:", error);
+  });
 
 client
   .listSonicActions()
@@ -293,56 +310,194 @@ client
     console.error("Error listing Sonic actions:", error);
   });
 
-  client
-    .listGoatActions()
-    .then((response) => {
-      console.log("Goat Actions:", response.actions);
-    })
-    .catch((error) => {
-      console.error("Error listing Sonic actions:", error);
-    });
+client
+  .listGoatActions()
+  .then((response) => {
+    console.log("Goat Actions:", response.actions);
+  })
+  .catch((error) => {
+    console.error("Error listing Sonic actions:", error);
+  });
 
+client
+  .listTwitterActions()
+  .then((response) => {
+    console.log("Twitter Actions:", response.actions);
+  })
+  .catch((error) => {
+    console.error("Error listing Twitter actions:", error);
+  });
 
-// client
-//   .listTwitterActions()
-//   .then((response) => {
-//     console.log("Twitter Actions:", response.actions);
-//   })
-//   .catch((error) => {
-//     console.error("Error listing Twitter actions:", error);
-//   });
-
-// // Example usage of chatWithAgent
-// client.chatWithAgent("What is the capital of France?")
-//   .then((response) => {
-//     console.log("Agent Response:", response.response);
-//   })
-//   .catch((error) => {
-//     console.error("Error chatting with agent:", error);
-//   });
+// Example usage of chatWithAgent
+client
+  .chatWithAgent("What is the capital of France?")
+  .then((response) => {
+    console.log("Agent Response:", response.response);
+  })
+  .catch((error) => {
+    console.error("Error chatting with agent:", error);
+  });
 
 const SimpleChatPanel = () => {
   const [message, setMessage] = useState("");
-  const [responses, setResponses] = useState<string[]>([]);
+  const [responses, setResponses] = useState<
+    { type: "question" | "response"; content: string }[]
+  >([]);
   const [error, setError] = useState("");
-  const [selectedAction, setSelectedAction] = useState("chat");
-  const [additionalParams, setAdditionalParams] = useState<
-    Record<string, string>
-  >({});
 
   const client = new ZerePyFrontendClient("http://localhost:8000");
+
+  const interpretUserInput = (input: string) => {
+    const lowerInput = input.toLowerCase();
+
+    // Balance
+    if (lowerInput.includes("balance")) {
+      const addressMatch = lowerInput.match(/0x[a-fA-F0-9]{40}/);
+      const address = addressMatch ? addressMatch[0] : "";
+
+      return { action: "getBalance", params: { address } };
+    }
+
+    // Transfer
+    if (lowerInput.includes("transfer")) {
+      const amountMatch = lowerInput.match(/\d+/);
+      const addressMatch = lowerInput.match(/0x[a-fA-F0-9]{40}/g);
+
+      return {
+        action: "transfer",
+        params: {
+          toAddress: addressMatch ? addressMatch[1] : "",
+          amount: amountMatch ? amountMatch[0] : "",
+          tokenAddress: "", // Optional
+        },
+      };
+    }
+
+    // Swap
+    if (lowerInput.includes("swap")) {
+      const amountMatch = lowerInput.match(/\d+/);
+      const tokenMatches = lowerInput.match(/\b[A-Za-z]+\b/g);
+
+      return {
+        action: "swap",
+        params: {
+          tokenIn: tokenMatches ? tokenMatches[0] : "",
+          tokenOut: tokenMatches ? tokenMatches[1] : "",
+          amount: amountMatch ? amountMatch[0] : "",
+          slippage: "", // Optional
+        },
+      };
+    }
+
+    // Get Address
+    if (lowerInput.includes("address")) {
+      return { action: "getAddress", params: {} };
+    }
+
+    // Get Chain
+    if (lowerInput.includes("chain")) {
+      return { action: "getChain", params: {} };
+    }
+
+    // List Sonic Actions
+    if (lowerInput.includes("sonic actions")) {
+      return { action: "listSonicActions", params: {} };
+    }
+
+    // List Goat Actions
+    if (lowerInput.includes("goat actions")) {
+      return { action: "listGoatActions", params: {} };
+    }
+
+    // List Twitter Actions
+    if (lowerInput.includes("twitter actions")) {
+      return { action: "listTwitterActions", params: {} };
+    }
+
+    // Load Agent
+    if (lowerInput.includes("load agent")) {
+      const agentNameMatch = lowerInput.match(/load agent (\w+)/);
+      const agentName = agentNameMatch ? agentNameMatch[1] : "";
+
+      return { action: "loadAgent", params: { name: agentName } };
+    }
+
+    // Get Token by Ticker
+    if (lowerInput.includes("token by ticker")) {
+      const tickerMatch = lowerInput.match(/token by ticker (\w+)/);
+      const ticker = tickerMatch ? tickerMatch[1] : "";
+
+      return { action: "getTokenByTicker", params: { ticker } };
+    }
+
+    // Default to chat if no action is recognized
+    return { action: "chat", params: { message: input } };
+  };
 
   const sendMessage = async () => {
     if (!message.trim()) return;
 
     try {
+      // Add the user's question to the responses
+      setResponses((prev) => [...prev, { type: "question", content: message }]);
+
+      // Interpret the user's input
+      const { action, params } = interpretUserInput(message);
+
       let response;
+
+      switch (action) {
+        case "getBalance":
+          response = await client.getBalance(params.address);
+          break;
+        case "transfer":
+          response = await client.transfer(
+            params.toAddress,
+            params.amount,
+            params.tokenAddress,
+          );
+          break;
+        case "swap":
+          response = await client.swap(
+            params.tokenIn,
+            params.tokenOut,
+            params.amount,
+            params.slippage ? parseFloat(params.slippage) : undefined,
+          );
+          break;
+        case "getAddress":
+          response = await client.getAddress();
+          break;
+        case "getChain":
+          response = await client.getChain();
+          break;
+        case "listSonicActions":
+          response = await client.listSonicActions();
+          break;
+        case "listGoatActions":
+          response = await client.listGoatActions();
+          break;
+        case "listTwitterActions":
+          response = await client.listTwitterActions();
+          break;
+        case "loadAgent":
+          response = await client.loadAgent(params.name);
+          break;
+        case "getTokenByTicker":
+          response = await client.getTokenByTicker(params.ticker);
+          break;
+        case "chat":
+        default:
+          response = await client.chatWithAgent(message);
+          break;
+      }
+
+      // Extract and display the relevant result
+      const result = response.result || response.response || response;
 
       setResponses((prev) => [
         ...prev,
-        `Action: ${selectedAction}`,
-        `Sent: ${message}`,
-        `Received: ${JSON.stringify(response)}`,
+        { type: "response", content: JSON.stringify(result, null, 2) },
       ]);
       setMessage("");
       setError("");
@@ -352,114 +507,15 @@ const SimpleChatPanel = () => {
     }
   };
 
-  const renderAdditionalInputs = () => {
-    switch (selectedAction) {
-      case "send-sol":
-      case "send-eth":
-        return (
-          <input
-            type="text"
-            value={additionalParams.recipient || ""}
-            onChange={(e) =>
-              setAdditionalParams({
-                ...additionalParams,
-                recipient: e.target.value,
-              })
-            }
-            className="p-2 border rounded"
-            placeholder="Recipient Address"
-          />
-        );
-      case "swap-tokens":
-        return (
-          <>
-            <input
-              type="text"
-              value={additionalParams.tokenA || ""}
-              onChange={(e) =>
-                setAdditionalParams({
-                  ...additionalParams,
-                  tokenA: e.target.value,
-                })
-              }
-              className="p-2 border rounded"
-              placeholder="Token A"
-            />
-            <input
-              type="text"
-              value={additionalParams.tokenB || ""}
-              onChange={(e) =>
-                setAdditionalParams({
-                  ...additionalParams,
-                  tokenB: e.target.value,
-                })
-              }
-              className="p-2 border rounded"
-              placeholder="Token B"
-            />
-          </>
-        );
-      case "generate-text":
-        return (
-          <input
-            type="text"
-            value={additionalParams.systemMessage || ""}
-            onChange={(e) =>
-              setAdditionalParams({
-                ...additionalParams,
-                systemMessage: e.target.value,
-              })
-            }
-            className="p-2 border rounded"
-            placeholder="System Message"
-          />
-        );
-      default:
-        return null;
-    }
-  };
-
   return (
-    <div className="p-4 max-w-2xl mx-auto">
-      <div className="mb-4 p-4 bg-gray-100 min-h-[300px] rounded">
-        {responses.map((msg, i) => (
-          <div key={i} className="mb-2">
-            {msg}
-          </div>
-        ))}
-        {error && <div className="text-red-500">{error}</div>}
-      </div>
+    <div className=" bg-gradient-to-br from-purple-50 to-blue-50 flex flex-col items-center justify-center p-2">
+      <div className="w-full bg-white rounded-lg shadow-lg overflow-hidden flex flex-col">
+        {/* Chat Header */}
+        <div className="bg-gradient-to-r from-purple-600 to-blue-600 p-4">
+          <h1 className="text-2xl font-bold text-white">ZerePy Chat</h1>
+          <p className="text-sm text-purple-200">Your AI-powered assistant</p>
+        </div>
 
-      <div className="flex gap-2 mb-4">
-        <input
-          type="text"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyPress={(e) => e.key === "Enter" && sendMessage()}
-          className="flex-1 p-2 border rounded"
-          placeholder="Type a message or action parameters..."
-        />
-        <button
-          onClick={sendMessage}
-          className="px-4 py-2 bg-blue-500 text-white rounded">
-          Send
-        </button>
-      </div>
-
-      {renderAdditionalInputs()}
-
-      <div className="mt-4 flex flex-wrap gap-2">
-        <button
-          onClick={async () => {
-            const connections = await client.listConnections();
-            setResponses((prev) => [
-              ...prev,
-              `Available Connections: ${JSON.stringify(connections)}`,
-            ]);
-          }}
-          className="px-4 py-2 bg-green-500 text-white rounded">
-          List Connections
-        </button>
       </div>
     </div>
   );
