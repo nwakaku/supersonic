@@ -1,14 +1,14 @@
-## **🔹 VoiceChain: Where YOU can talk to your own personalized blockchain assistant. (Retell AI + ZerePy)**  
+## **🔹 SuperSonic: Where YOU can talk to your own personalized blockchain assistant. (Retell AI + ZerePy)**  
 
 ### **🚀 Inspiration**  
 Access to financial services remains a global challenge, with **1.7 billion people still unbanked**. Traditional banking requires internet access, digital literacy, and physical infrastructure—barriers that exclude many underserved populations.  
 
-Inspired by **Web3, AI, and decentralization**, we envisioned **VoiceChain**, a **voice-first, web3 assistant**. By leveraging **Retell AI for conversational AI** and **ZerePy for Blockchain activities**, VoiceChain enables **borderless, trustless, and inclusive finance** for everyone—**no smartphone, internet required nor blockchain knowledge**.  
+Inspired by **Web3, AI, and decentralization**, we envisioned **SuperSonic**, a **voice-first, web3 assistant**. By leveraging **Retell AI for conversational AI** and **ZerePy for Blockchain activities**, SuperSonic enables **borderless, trustless, and inclusive finance** for everyone—**no smartphone, internet required nor blockchain knowledge**.  
 
 ---
 
 ## **🔹 What It Does**  
-VoiceChain transforms **Web3 adoption** through an intuitive, **voice-driven AI assistant** that interacts over **simple phone calls**. Users can seamlessly:  
+SuperSonic transforms **Web3 adoption** through an intuitive, **voice-driven AI assistant** that interacts over **simple phone calls**. Users can seamlessly:  
 
 ✅ **Send & Receive Crypto** _(e.g.,$ Sonic, USDC, cUSD, DAI)_ via voice commands  
 ✅ **Check Wallet Balances** on any blockchain (Ethereum, Sonic, Solana, etc.)  
@@ -78,7 +78,7 @@ To create a seamless and decentralized **voice banking experience**, we integrat
 
 ---
 
-## **🔹 What’s Next for VoiceChain?**  
+## **🔹 What’s Next for SuperSonic?**  
 
 🚀 **Multi-Chain Expansion**: Add support for **Polygon, Celo, and Arbitrum** and etc  
 📊 **AI-Powered Financial Coaching**: Provide **personalized DeFi investment insights**  
