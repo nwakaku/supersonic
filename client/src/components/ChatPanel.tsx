@@ -4,10 +4,15 @@ import React, { useState, useEffect } from "react";
 import Retell from "retell-sdk";
 import { Card, CardBody, Badge } from "@nextui-org/react";
 import { Mic, Phone, User2, RadioTower } from "lucide-react";
+import { RetellWebClient } from "retell-client-js-sdk";
 
 const ChatPanel = () => {
   const [calls, setCalls] = useState([]);
   const [selectedCall, setSelectedCall] = useState(null);
+  //
+  const [retellWebClient] = useState(() => new RetellWebClient());
+  const [liveTranscript, setLiveTranscript] = useState([]);
+  const [isCallActive, setIsCallActive] = useState(false);
 
   const formatTranscript = (transcript) => {
     if (!transcript) return [];
@@ -47,6 +52,54 @@ const ChatPanel = () => {
     return () => clearInterval(intervalId);
   }, []);
 
+  // Add this new useEffect for handling live transcript events
+  useEffect(() => {
+    if (!selectedCall || selectedCall.call_status !== "ongoing") {
+      setLiveTranscript([]);
+      setIsCallActive(false);
+      return;
+    }
+
+    // Set up event listeners
+    retellWebClient.on("call_started", () => {
+      console.log("call started");
+      setIsCallActive(true);
+    });
+
+    retellWebClient.on("call_ended", () => {
+      console.log("call ended");
+      setIsCallActive(false);
+    });
+
+    retellWebClient.on("update", (update) => {
+      if (update.transcript) {
+        setLiveTranscript((current) => {
+          const newTranscripts = formatTranscript(update.transcript);
+          // Only add new transcripts that aren't already in the state
+          const existingIds = new Set(current.map((t) => t.content));
+          const uniqueNewTranscripts = newTranscripts.filter(
+            (t) => !existingIds.has(t.content),
+          );
+          return [...current, ...uniqueNewTranscripts];
+        });
+      }
+    });
+
+    retellWebClient.on("error", (error) => {
+      console.error("An error occurred:", error);
+      retellWebClient.stopCall();
+      setIsCallActive(false);
+    });
+
+    // Clean up event listeners
+    return () => {
+      retellWebClient.removeAllListeners();
+      if (isCallActive) {
+        retellWebClient.stopCall();
+      }
+    };
+  }, [selectedCall]);
+
   const getStatusColor = (status) => {
     switch (status) {
       case "ongoing":
@@ -75,7 +128,7 @@ const ChatPanel = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-100">
+    <div className="flex h-screen bg-gray-400 rounded-md">
       {/* Sidebar */}
       <div
         className="w-64 bg-white border-r border-gray-200"
@@ -168,17 +221,58 @@ const ChatPanel = () => {
           aria-label="Call transcript"
         >
           {selectedCall?.call_status === "ongoing" ? (
-            <div className="flex items-center justify-center h-full">
-              <Card>
-                <CardBody className="text-center">
-                  <RadioTower className="w-8 h-8 text-green-500 animate-pulse mx-auto mb-2" />
-                  <p>Call in progress</p>
-                  <p className="text-sm text-gray-500">
-                    Transcript will be available after the call ends
-                  </p>
-                </CardBody>
-              </Card>
-            </div>
+            <>
+              {liveTranscript.length === 0 ? (
+                <div className="flex items-center justify-center h-full">
+                  <Card>
+                    <CardBody className="text-center">
+                      <RadioTower className="w-8 h-8 text-green-500 animate-pulse mx-auto mb-2" />
+                      <p>Call in progress</p>
+                      <p className="text-sm text-gray-500">
+                        Waiting for conversation to begin...
+                      </p>
+                    </CardBody>
+                  </Card>
+                </div>
+              ) : (
+                liveTranscript.map((message, index) => (
+                  <div
+                    aria-label={`${message.role === "agent" ? "AI Agent" : "User"} message`}
+                    className={`flex ${
+                      message.role === "agent" ? "justify-start" : "justify-end"
+                    }`}
+                    key={index}
+                    role="article"
+                  >
+                    <Card
+                      className={`max-w-[80%] ${
+                        message.role === "agent" ? "bg-white" : "bg-blue-500"
+                      }`}
+                    >
+                      <CardBody
+                        className={`p-4 ${
+                          message.role === "user"
+                            ? "text-white"
+                            : "text-gray-700"
+                        }`}
+                      >
+                        <div className="flex items-center space-x-2 mb-1">
+                          {message.role === "agent" ? (
+                            <Mic aria-hidden="true" className="w-4 h-4" />
+                          ) : (
+                            <User2 aria-hidden="true" className="w-4 h-4" />
+                          )}
+                          <span className="font-medium">
+                            {message.role === "agent" ? "AI Agent" : "User"}
+                          </span>
+                        </div>
+                        {message.content}
+                      </CardBody>
+                    </Card>
+                  </div>
+                ))
+              )}
+            </>
           ) : (
             selectedCall?.transcript &&
             formatTranscript(selectedCall.transcript).map((message, index) => (
