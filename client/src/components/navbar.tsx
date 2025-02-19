@@ -56,7 +56,8 @@ export const Navbar = () => {
             color="foreground"
             href="/"
           >
-            <p className=" text-2xl">TalkTauhWeb3</p>
+            <img alt="sonic" className="w-8 h-8" src="/sonic.png" />
+            <p className=" text-2xl font-semibold">SuperSonic</p>
           </Link>
         </NavbarBrand>
       </NavbarContent>
@@ -65,7 +66,6 @@ export const Navbar = () => {
         className="hidden sm:flex basis-1/5 sm:basis-full"
         justify="end"
       >
-        
         <NavbarItem className="hidden lg:flex">{searchInput}</NavbarItem>
         <NavbarItem className="hidden md:flex">
           <Button
