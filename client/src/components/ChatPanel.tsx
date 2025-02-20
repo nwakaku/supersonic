@@ -9,7 +9,6 @@ import { RetellWebClient } from "retell-client-js-sdk";
 const ChatPanel = () => {
   const [calls, setCalls] = useState([]);
   const [selectedCall, setSelectedCall] = useState(null);
-  //
   const [retellWebClient] = useState(() => new RetellWebClient());
   const [liveTranscript, setLiveTranscript] = useState([]);
   const [isCallActive, setIsCallActive] = useState(false);
@@ -47,12 +46,10 @@ const ChatPanel = () => {
 
     fetchCalls();
 
-    // Poll for updates every 30 seconds
     const intervalId = setInterval(fetchCalls, 30000);
     return () => clearInterval(intervalId);
   }, []);
 
-  // Add this new useEffect for handling live transcript events
   useEffect(() => {
     if (!selectedCall || selectedCall.call_status !== "ongoing") {
       setLiveTranscript([]);
@@ -60,7 +57,6 @@ const ChatPanel = () => {
       return;
     }
 
-    // Set up event listeners
     retellWebClient.on("call_started", () => {
       console.log("call started");
       setIsCallActive(true);
@@ -75,10 +71,9 @@ const ChatPanel = () => {
       if (update.transcript) {
         setLiveTranscript((current) => {
           const newTranscripts = formatTranscript(update.transcript);
-          // Only add new transcripts that aren't already in the state
           const existingIds = new Set(current.map((t) => t.content));
           const uniqueNewTranscripts = newTranscripts.filter(
-            (t) => !existingIds.has(t.content),
+            (t) => !existingIds.has(t.content)
           );
           return [...current, ...uniqueNewTranscripts];
         });
@@ -91,7 +86,6 @@ const ChatPanel = () => {
       setIsCallActive(false);
     });
 
-    // Clean up event listeners
     return () => {
       retellWebClient.removeAllListeners();
       if (isCallActive) {
@@ -128,36 +122,26 @@ const ChatPanel = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-400 rounded-md">
+    <div className="flex h-screen bg-gray-100 rounded-lg overflow-hidden shadow-lg">
       {/* Sidebar */}
-      <div
-        className="w-64 bg-white border-r border-gray-200"
-        role="navigation"
-        aria-label="Call history"
-      >
-        <div className="p-4 border-b border-gray-200">
-          <h2 className="text-lg font-semibold">Call History</h2>
+      <div className="w-64 bg-white border-r border-gray-200 shadow-sm">
+        <div className="p-4 border-b border-gray-200 bg-gray-50">
+          <h2 className="text-lg font-semibold text-gray-800">Call History</h2>
         </div>
-        <div className="overflow-y-auto h-full">
+        <div className="overflow-y-auto h-[calc(100vh-64px)]">
           {calls.map((call) => (
             <button
               key={call.call_id}
               onClick={() => setSelectedCall(call)}
-              className={`w-full text-left p-4 border-b border-gray-200 cursor-pointer hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+              className={`w-full text-left p-4 border-b border-gray-200 hover:bg-gray-50 transition-colors duration-200 ${
                 selectedCall?.call_id === call.call_id ? "bg-blue-50" : ""
               }`}
-              role="tab"
-              aria-selected={selectedCall?.call_id === call.call_id}
-              tabIndex={0}
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <Phone
-                    className={`w-6 h-6 ${getStatusColor(call.call_status)}`}
-                    aria-hidden="true"
-                  />
+                  <Phone className={`w-5 h-5 ${getStatusColor(call.call_status)}`} />
                   <div>
-                    <p className="font-medium">
+                    <p className="font-medium text-gray-800">
                       Call {call.call_id.slice(0, 14)}...
                     </p>
                     <p className="text-sm text-gray-500">
@@ -173,12 +157,10 @@ const ChatPanel = () => {
                   call.call_status === "ongoing"
                     ? "success"
                     : call.call_status === "ended"
-                      ? "success"
+                      ? "default"
                       : call.call_status === "error"
                         ? "danger"
-                        : call.call_status === "registered"
-                          ? "warning"
-                          : "default"
+                        : "warning"
                 }
               >
                 {call.call_status}
@@ -189,18 +171,17 @@ const ChatPanel = () => {
       </div>
 
       {/* Main Chat Area */}
-      <main className="flex-1 flex flex-col" role="main">
+      <main className="flex-1 flex flex-col bg-white">
         {/* Header */}
-        <header className="p-4 border-b border-gray-200 bg-white">
+        <header className="p-4 border-b border-gray-200 bg-gray-50">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <h1 className="text-xl font-semibold">Call Transcript</h1>
+              <h1 className="text-xl font-semibold text-gray-800">Call Transcript</h1>
               {selectedCall && (
                 <span className="text-sm text-gray-500">
                   Duration:{" "}
                   {(
-                    (selectedCall.end_timestamp -
-                      selectedCall.start_timestamp) /
+                    (selectedCall.end_timestamp - selectedCall.start_timestamp) /
                     1000
                   ).toFixed(0)}
                   s
@@ -208,26 +189,22 @@ const ChatPanel = () => {
               )}
             </div>
             <div className="flex items-center space-x-2">
-              <Mic className="w-5 h-5 text-gray-500" aria-hidden="true" />
+              <Mic className="w-5 h-5 text-gray-500" />
               <span className="text-sm text-gray-500">Recording Available</span>
             </div>
           </div>
         </header>
 
         {/* Chat Messages */}
-        <div
-          className="flex-1 overflow-y-auto p-4 space-y-4 bg-gray-50"
-          role="log"
-          aria-label="Call transcript"
-        >
+        <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-gray-50">
           {selectedCall?.call_status === "ongoing" ? (
             <>
               {liveTranscript.length === 0 ? (
                 <div className="flex items-center justify-center h-full">
-                  <Card>
-                    <CardBody className="text-center">
+                  <Card className="bg-white shadow-sm">
+                    <CardBody className="text-center p-6">
                       <RadioTower className="w-8 h-8 text-green-500 animate-pulse mx-auto mb-2" />
-                      <p>Call in progress</p>
+                      <p className="text-gray-800">Call in progress</p>
                       <p className="text-sm text-gray-500">
                         Waiting for conversation to begin...
                       </p>
@@ -237,36 +214,32 @@ const ChatPanel = () => {
               ) : (
                 liveTranscript.map((message, index) => (
                   <div
-                    aria-label={`${message.role === "agent" ? "AI Agent" : "User"} message`}
+                    key={index}
                     className={`flex ${
                       message.role === "agent" ? "justify-start" : "justify-end"
                     }`}
-                    key={index}
-                    role="article"
                   >
                     <Card
                       className={`max-w-[80%] ${
                         message.role === "agent" ? "bg-white" : "bg-blue-500"
-                      }`}
+                      } shadow-sm`}
                     >
                       <CardBody
                         className={`p-4 ${
-                          message.role === "user"
-                            ? "text-white"
-                            : "text-gray-700"
+                          message.role === "user" ? "text-white" : "text-gray-800"
                         }`}
                       >
-                        <div className="flex items-center space-x-2 mb-1">
+                        <div className="flex items-center space-x-2 mb-2">
                           {message.role === "agent" ? (
-                            <Mic aria-hidden="true" className="w-4 h-4" />
+                            <Mic className="w-4 h-4 text-gray-500" />
                           ) : (
-                            <User2 aria-hidden="true" className="w-4 h-4" />
+                            <User2 className="w-4 h-4 text-blue-300" />
                           )}
                           <span className="font-medium">
                             {message.role === "agent" ? "AI Agent" : "User"}
                           </span>
                         </div>
-                        {message.content}
+                        <p>{message.content}</p>
                       </CardBody>
                     </Card>
                   </div>
@@ -277,34 +250,32 @@ const ChatPanel = () => {
             selectedCall?.transcript &&
             formatTranscript(selectedCall.transcript).map((message, index) => (
               <div
-                aria-label={`${message.role === "agent" ? "AI Agent" : "User"} message`}
+                key={index}
                 className={`flex ${
                   message.role === "agent" ? "justify-start" : "justify-end"
                 }`}
-                key={index}
-                role="article"
               >
                 <Card
                   className={`max-w-[80%] ${
                     message.role === "agent" ? "bg-white" : "bg-blue-500"
-                  }`}
+                  } shadow-sm`}
                 >
                   <CardBody
                     className={`p-4 ${
-                      message.role === "user" ? "text-white" : "text-gray-700"
+                      message.role === "user" ? "text-white" : "text-gray-800"
                     }`}
                   >
-                    <div className="flex items-center space-x-2 mb-1">
+                    <div className="flex items-center space-x-2 mb-2">
                       {message.role === "agent" ? (
-                        <Mic aria-hidden="true" className="w-4 h-4" />
+                        <Mic className="w-4 h-4 text-gray-500" />
                       ) : (
-                        <User2 aria-hidden="true" className="w-4 h-4" />
+                        <User2 className="w-4 h-4 text-blue-300" />
                       )}
                       <span className="font-medium">
                         {message.role === "agent" ? "AI Agent" : "User"}
                       </span>
                     </div>
-                    {message.content}
+                    <p>{message.content}</p>
                   </CardBody>
                 </Card>
               </div>
@@ -314,14 +285,14 @@ const ChatPanel = () => {
 
         {/* Call Summary */}
         {selectedCall?.call_analysis && (
-          <footer className="p-4 bg-white border-t border-gray-200">
-            <Card className="bg-gray-50">
-              <CardBody>
-                <h3 className="font-semibold mb-2">Call Summary</h3>
+          <footer className="p-6 bg-white border-t border-gray-200">
+            <Card className="bg-gray-50 shadow-sm">
+              <CardBody className="p-6">
+                <h3 className="font-semibold text-gray-800 mb-4">Call Summary</h3>
                 <p className="text-gray-700">
                   {selectedCall.call_analysis.call_summary}
                 </p>
-                <div className="mt-2 flex space-x-4 text-sm text-gray-500">
+                <div className="mt-4 flex space-x-4 text-sm text-gray-500">
                   <span>
                     Sentiment: {selectedCall.call_analysis.user_sentiment}
                   </span>
