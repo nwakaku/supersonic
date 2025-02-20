@@ -51,8 +51,10 @@ const ChatPanel = () => {
   }, []);
 
   useEffect(() => {
+    console.log("loaded");
+    
     if (!selectedCall || selectedCall.call_status !== "ongoing") {
-      setLiveTranscript([]);
+      // setLiveTranscript([]);
       setIsCallActive(false);
       return;
     }
@@ -68,16 +70,17 @@ const ChatPanel = () => {
     });
 
     retellWebClient.on("update", (update) => {
-      if (update.transcript) {
-        setLiveTranscript((current) => {
-          const newTranscripts = formatTranscript(update.transcript);
-          const existingIds = new Set(current.map((t) => t.content));
-          const uniqueNewTranscripts = newTranscripts.filter(
-            (t) => !existingIds.has(t.content)
-          );
-          return [...current, ...uniqueNewTranscripts];
-        });
-      }
+      console.log("live transcript -", update);
+      // if (update.transcript) {
+      //   setLiveTranscript((current) => {
+      //     const newTranscripts = formatTranscript(update.transcript);
+      //     const existingIds = new Set(current.map((t) => t.content));
+      //     const uniqueNewTranscripts = newTranscripts.filter(
+      //       (t) => !existingIds.has(t.content)
+      //     );
+      //     return [...current, ...uniqueNewTranscripts];
+      //   });
+      // }
     });
 
     retellWebClient.on("error", (error) => {
@@ -139,7 +142,9 @@ const ChatPanel = () => {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-3">
-                  <Phone className={`w-5 h-5 ${getStatusColor(call.call_status)}`} />
+                  <Phone
+                    className={`w-5 h-5 ${getStatusColor(call.call_status)}`}
+                  />
                   <div>
                     <p className="font-medium text-gray-800">
                       Call {call.call_id.slice(0, 14)}...
@@ -176,12 +181,15 @@ const ChatPanel = () => {
         <header className="p-4 border-b border-gray-200 bg-gray-50">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <h1 className="text-xl font-semibold text-gray-800">Call Transcript</h1>
+              <h1 className="text-xl font-semibold text-gray-800">
+                Call Transcript
+              </h1>
               {selectedCall && (
                 <span className="text-sm text-gray-500">
                   Duration:{" "}
                   {(
-                    (selectedCall.end_timestamp - selectedCall.start_timestamp) /
+                    (selectedCall.end_timestamp -
+                      selectedCall.start_timestamp) /
                     1000
                   ).toFixed(0)}
                   s
@@ -226,7 +234,9 @@ const ChatPanel = () => {
                     >
                       <CardBody
                         className={`p-4 ${
-                          message.role === "user" ? "text-white" : "text-gray-800"
+                          message.role === "user"
+                            ? "text-white"
+                            : "text-gray-800"
                         }`}
                       >
                         <div className="flex items-center space-x-2 mb-2">
@@ -288,7 +298,9 @@ const ChatPanel = () => {
           <footer className="p-6 bg-white border-t border-gray-200">
             <Card className="bg-gray-50 shadow-sm">
               <CardBody className="p-6">
-                <h3 className="font-semibold text-gray-800 mb-4">Call Summary</h3>
+                <h3 className="font-semibold text-gray-800 mb-4">
+                  Call Summary
+                </h3>
                 <p className="text-gray-700">
                   {selectedCall.call_analysis.call_summary}
                 </p>
