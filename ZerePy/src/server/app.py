@@ -266,27 +266,68 @@ class ZerePyServer:
                 logger.error(f"Chat failed: {str(e)}")
                 raise HTTPException(status_code=500, detail=str(e))
 
-        @self.app.post("/agent/start")
-        async def start_agent():
-            """Start the agent loop"""
-            # if not self.state.cli.agent:
-            #     raise HTTPException(status_code=400, detail="No agent loaded")
+        # @self.app.post("/agent/start")
+        # async def start_agent():
+        #     """Start the agent loop"""
+        #     # if not self.state.cli.agent:
+        #     #     raise HTTPException(status_code=400, detail="No agent loaded")
             
+        #     try:
+        #         await self.state.start_agent_loop()
+        #         return {"status": "success", "message": "Agent loop started"}
+        #     except Exception as e:
+        #         raise HTTPException(status_code=400, detail=str(e))
+
+        @self.app.post("/agent/start")
+        async def start_agent(request: Request):
+            """Start the agent loop"""
             try:
+                # Log the incoming request
+                logger.info("Incoming request to /agent/start")
+                
+                # Validate agent is loaded
+                if not self.state.cli.agent:
+                    logger.error("No agent loaded")
+                    return {"message": "error", "detail": "No agent loaded"}
+                
+                # Start the agent loop
                 await self.state.start_agent_loop()
-                return {"status": "success", "message": "Agent loop started"}
+                
+                # Log successful start
+                logger.info("Agent loop started successfully")
+                
+                return {
+                    "message": "success",
+                    "detail": "Agent loop started"
+                }
+                    
             except Exception as e:
-                raise HTTPException(status_code=400, detail=str(e))
+                logger.error(f"Failed to start agent: {str(e)}", exc_info=True)
+                return {"message": "error", "detail": str(e)}
+
 
         @self.app.post("/agent/stop")
-        async def stop_agent():
+        async def stop_agent(request: Request):
             """Stop the agent loop"""
             try:
+                # Log the incoming request
+                logger.info("Incoming request to /agent/stop")
+                
+                # Stop the agent loop
                 await self.state.stop_agent_loop()
-                return {"status": "success", "message": "Agent loop stopped"}
+                
+                # Log successful stop
+                logger.info("Agent loop stopped successfully")
+                
+                return {
+                    "message": "success",
+                    "detail": "Agent loop stopped"
+                }
+                    
             except Exception as e:
-                raise HTTPException(status_code=400, detail=str(e))
-        
+                logger.error(f"Failed to stop agent: {str(e)}", exc_info=True)
+                return {"message": "error", "detail": str(e)}
+
         @self.app.post("/connections/{name}/configure")
         async def configure_connection(name: str, config: ConfigureRequest):
             """Configure a specific connection"""

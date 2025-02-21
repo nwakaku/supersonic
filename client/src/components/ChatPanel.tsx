@@ -51,49 +51,41 @@ const ChatPanel = () => {
   }, []);
 
   useEffect(() => {
-    console.log("loaded");
-    
     if (!selectedCall || selectedCall.call_status !== "ongoing") {
-      // setLiveTranscript([]);
       setIsCallActive(false);
       return;
     }
 
-    retellWebClient.on("call_started", () => {
-      console.log("call started");
-      setIsCallActive(true);
-    });
+    console.log(
+      "Setting up transcript listeners for call:",
+      selectedCall.call_id
+    );
+    setIsCallActive(true);
 
-    retellWebClient.on("call_ended", () => {
-      console.log("call ended");
-      setIsCallActive(false);
-    });
-
+    // Set up event listeners for transcript updates
     retellWebClient.on("update", (update) => {
-      console.log("live transcript -", update);
-      // if (update.transcript) {
-      //   setLiveTranscript((current) => {
-      //     const newTranscripts = formatTranscript(update.transcript);
-      //     const existingIds = new Set(current.map((t) => t.content));
-      //     const uniqueNewTranscripts = newTranscripts.filter(
-      //       (t) => !existingIds.has(t.content)
-      //     );
-      //     return [...current, ...uniqueNewTranscripts];
-      //   });
-      // }
+      console.log("Received transcript update:", update);
+      if (update?.transcript) {
+        setLiveTranscript((current) => {
+          const newTranscripts = formatTranscript(update.transcript);
+          const existingIds = new Set(current.map((t) => t.content));
+          const uniqueNewTranscripts = newTranscripts.filter(
+            (t) => !existingIds.has(t.content)
+          );
+          return [...current, ...uniqueNewTranscripts];
+        });
+      }
     });
 
+    // Error handling
     retellWebClient.on("error", (error) => {
-      console.error("An error occurred:", error);
-      retellWebClient.stopCall();
-      setIsCallActive(false);
+      console.error("Transcript listener error:", error);
+      setError(`Error receiving updates: ${error.message || "Unknown error"}`);
     });
 
     return () => {
+      console.log("Cleaning up transcript listeners");
       retellWebClient.removeAllListeners();
-      if (isCallActive) {
-        retellWebClient.stopCall();
-      }
     };
   }, [selectedCall]);
 
