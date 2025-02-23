@@ -23,6 +23,7 @@ import {
   HeartFilledIcon,
   SearchIcon,
 } from "@/components/icons";
+import AuthModal from "./AuthModal";
 
 export const Navbar = () => {
   const searchInput = (
@@ -85,7 +86,7 @@ export const Navbar = () => {
         <NavbarItem className="hidden sm:flex gap-2">
           <ThemeSwitch />
         </NavbarItem>
-        <NavbarItem className="hidden md:flex">
+        <NavbarItem className="hidden md:flex gap-2">
           <Button
             isExternal
             as={Link}
@@ -96,6 +97,7 @@ export const Navbar = () => {
           >
             Sponsor
           </Button>
+          <AuthModal/>
         </NavbarItem>
       </NavbarContent>
 

@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.connections.goat_connection import GoatConnection
 import requests 
 
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("server/app")
 
@@ -18,6 +19,12 @@ class ActionRequest(BaseModel):
     connection: str
     action: str
     params: Optional[Dict[str, Any]] = {}
+
+class EnvFormData(BaseModel):
+    sonic: dict
+    twitter: dict
+    goat: dict
+    ai: dict
 
 class ConnectionRequest(BaseModel):
     """Request model for proxy list actions"""
@@ -89,26 +96,48 @@ class ZerePyServer:
     def __init__(self):
         self.app = FastAPI(title="ZerePy Server")
 
-         # Add CORS middleware properly within the class initialization
+        # Add CORS middleware properly within the class initialization
         self.app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["*"],  # Allow all origins for testing
-        allow_credentials=True,
-        allow_methods=["*"],  # Allow all methods
-        allow_headers=["*"],  # Allow all headers
-    )
+            CORSMiddleware,
+            allow_origins=["*"],  # Allow all origins for testing
+            allow_credentials=True,
+            allow_methods=["*"],  # Allow all methods
+            allow_headers=["*"],  # Allow all headers
+        )
         
-         # Middleware to inject the ngrok-skip-browser-warning header
+        # Middleware to inject the ngrok-skip-browser-warning header
         @self.app.middleware("http")
         async def inject_ngrok_header(request: Request, call_next):
             response = await call_next(request)
             # Add the ngrok-skip-browser-warning header to the response
             response.headers["ngrok-skip-browser-warning"] = "true"
             return response
-        
 
         self.state = ServerState()
         self.setup_routes()
+
+    def format_env_data(self, form_data: EnvFormData) -> str:
+        """Convert form data into .env file format"""
+        return f"""# Sonic Configuration
+SONIC_PRIVATE_KEY={form_data.sonic.get("privateKey", "")}
+
+# Twitter Configuration
+TWITTER_USER_ID={form_data.twitter.get("userId", "")}
+TWITTER_USERNAME={form_data.twitter.get("username", "")}
+TWITTER_CONSUMER_KEY={form_data.twitter.get("consumerKey", "")}
+TWITTER_CONSUMER_SECRET={form_data.twitter.get("consumerSecret", "")}
+TWITTER_ACCESS_TOKEN={form_data.twitter.get("accessToken", "")}
+TWITTER_ACCESS_TOKEN_SECRET={form_data.twitter.get("accessTokenSecret", "")}
+
+# Goat Configuration
+GOAT_RPC_URL={form_data.goat.get("rpcUrl", "")}
+GOAT_PRIVATE_KEY={form_data.goat.get("privateKey", "")}
+
+# AI Providers Configuration
+ALLORA_KEY={form_data.ai.get("alloraKey", "")}
+TOGETHER_KEY={form_data.ai.get("togetherKey", "")}""".strip()
+
+        
 
     def setup_routes(self):
         @self.app.get("/")
@@ -468,6 +497,26 @@ class ZerePyServer:
                 
             except Exception as e:
                 raise HTTPException(status_code=500, detail=str(e))
+
+        @self.app.post("/save-env")
+        async def save_env(form_data: EnvFormData):
+            """Save form data to .env file"""
+            try:
+                # Format the form data into .env file content
+                env_content = self.format_env_data(form_data)
+
+                # Define the path to the .env file
+                env_path = Path(".env")
+
+                # Write the content to the .env file
+                with env_path.open("w") as env_file:
+                    env_file.write(env_content)
+
+                return {"status": "success", "message": ".env file saved successfully"}
+            except Exception as e:
+                logger.error(f"Failed to save .env file: {str(e)}")
+                raise HTTPException(status_code=500, detail=str(e))
+                
 
 def create_app():
     server = ZerePyServer()

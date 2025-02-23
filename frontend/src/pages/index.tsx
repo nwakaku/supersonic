@@ -1,16 +1,11 @@
 import { Link } from "@heroui/link";
-import { Snippet } from "@heroui/snippet";
-import { Code } from "@heroui/code";
-import { button as buttonStyles } from "@heroui/theme";
 
-import { siteConfig } from "@/config/site";
-import { title, subtitle } from "@/components/primitives";
-import { GithubIcon } from "@/components/icons";
 import DefaultLayout from "@/layouts/default";
+
 import { Button } from "@heroui/button";
 import { Card, CardBody, Image } from "@heroui/react";
-import { LucideBot, LucidePhoneCall, LucidePizza, LucideRadioTower } from "lucide-react";
 import OnboardingModal from "@/components/OnboardingModal";
+import { LucidePhoneCall, LucidePizza, LucideRadioTower } from "lucide-react";
 
 export default function IndexPage() {
   return (
@@ -27,7 +22,7 @@ export default function IndexPage() {
             💡 Load Agents. Manage Crypto. Automate Tasks. Get Advice.
           </p>
           <div className="flex flex-row gap-4 mt-6">
-            <OnboardingModal/>
+            <OnboardingModal />
             <Button
               as={Link}
               href="/demo"
@@ -53,7 +48,9 @@ export default function IndexPage() {
 
       {/* How It Works */}
       <div className="mt-8">
-        <h2 className="text-4xl text-warning font-bold mb-8 text-center">How It Works</h2>
+        <h2 className="text-4xl text-warning font-bold mb-8 text-center">
+          How It Works
+        </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <Card className="p-4">
             <CardBody>
