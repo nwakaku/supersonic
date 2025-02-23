@@ -319,7 +319,7 @@ const Dashboard = () => {
                   >
                     <Card
                       className={`max-w-[80%] ${
-                        message.role === "agent" ? "bg-gray-50" : "bg-blue-500"
+                        message.role === "agent" ? "bg-white" : "bg-blue-500"
                       } shadow-sm`}
                     >
                       <CardBody
