@@ -6,6 +6,13 @@ import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@heroui/button";
 import { Modal, ModalBody, ModalContent, ModalHeader } from "@heroui/react";
+import {
+  Dropdown,
+  DropdownTrigger,
+  DropdownMenu,
+  DropdownItem,
+} from "@heroui/dropdown";
+import { Avatar } from "@heroui/avatar";
 
 const supabase = createClient(
   "https://xnkhkebtkzadjgrwrmxb.supabase.co",
@@ -15,30 +22,96 @@ const supabase = createClient(
 export const AuthModal = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [session, setSession] = useState(null);
+  const [userProfile, setUserProfile] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state change listener specifically for sign-in events
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      if (session?.user) {
+        fetchUserProfile(session.user.id);
+      }
+    });
+
+    // Set up auth state change listener
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       setSession(session);
-
-      // Only navigate when a successful sign-in occurs
       if (event === "SIGNED_IN" && session) {
         setIsOpen(false);
+        await fetchUserProfile(session.user.id);
         navigate("/settings");
+      } else if (event === "SIGNED_OUT") {
+        setUserProfile(null);
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  const fetchUserProfile = async (userId) => {
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("username, avatar_url")
+      .eq("id", userId)
+      .single();
+
+    if (data) {
+      setUserProfile(data);
+    }
+  };
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    navigate("/");
+  };
+
+  if (session?.user) {
+    return (
+      <Dropdown>
+        <DropdownTrigger>
+          <Button className="p-0 bg-transparent" radius="full">
+            <Avatar
+              alt="Profile"
+              className="w-8 h-8"
+              size="sm"
+              src={
+                userProfile?.avatar_url ||
+                `https://ui-avatars.com/api/?name=${session.user.email}`
+              }
+            />
+            <span className="ml-2 text-sm font-normal text-default-600">
+              {userProfile?.username || session.user.email?.split("@")[0]}
+            </span>
+          </Button>
+        </DropdownTrigger>
+        <DropdownMenu aria-label="User menu">
+          <DropdownItem key="profile" onClick={() => navigate("/dashboard")}>
+            Dashboard
+          </DropdownItem>
+          <DropdownItem key="settings" onClick={() => navigate("/settings")}>
+            Settings
+          </DropdownItem>
+          <DropdownItem
+            key="logout"
+            className="text-danger"
+            color="danger"
+            onClick={handleSignOut}
+          >
+            Log Out
+          </DropdownItem>
+        </DropdownMenu>
+      </Dropdown>
+    );
+  }
+
   return (
     <>
       <Button
-        onPress={() => setIsOpen(true)}
         className="text-sm font-normal text-default-600 bg-default-100"
+        onPress={() => setIsOpen(true)}
       >
         Sign In
       </Button>
@@ -48,10 +121,10 @@ export const AuthModal = () => {
           <ModalHeader>Sign In</ModalHeader>
           <ModalBody>
             <Auth
-              supabaseClient={supabase}
               appearance={{ theme: ThemeSupa }}
               providers={["google", "discord"]}
               redirectTo={window.location.origin + "/settings"}
+              supabaseClient={supabase}
             />
           </ModalBody>
         </ModalContent>

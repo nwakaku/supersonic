@@ -23,10 +23,10 @@ export default function IndexPage() {
           <div className="flex flex-row gap-4 mt-6">
             <Button
               as={Link}
-              href="/#"
-              variant="bordered"
+              href="/settings"
+              variant="solid"
               size="lg"
-              className="font-semibold"
+              className="font-semibold bg-warning"
             >
               Get Started
             </Button>

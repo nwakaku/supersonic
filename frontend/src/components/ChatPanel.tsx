@@ -1,16 +1,15 @@
 //@ts-nocheck
 import { useState, useEffect } from "react";
 import Retell from "retell-sdk";
-import { Card, CardHeader, CardBody, Badge } from "@heroui/react";
+import { Card, CardHeader, CardBody, Badge, Link } from "@heroui/react";
 import {
   Mic,
   Phone,
   User2,
   RadioTower,
-  BarChart3,
-  Clock,
   PhoneCall,
   Users,
+  LucideBarChart3,
 } from "lucide-react";
 import { RetellWebClient } from "retell-client-js-sdk";
 
@@ -26,7 +25,7 @@ const Dashboard = () => {
     avgDuration: 0,
     successRate: 0,
   });
-  const [phoneNumbers, setPhoneNumbers] = useState([]); // New state for phone numbers
+  const [phoneNumbers, setPhoneNumbers] = useState(); // New state for phone numbers
 
   const formatTranscript = (transcript) => {
     if (!transcript) return [];
@@ -175,28 +174,30 @@ const Dashboard = () => {
         </div>
         <div className="p-4">
           <nav className="space-y-2">
-            <a
+            <Link
               href="#"
               className="flex items-center space-x-2 p-2 bg-blue-50 rounded-lg text-blue-700"
             >
               <PhoneCall className="w-5 h-5" />
               <span>Calls</span>
-            </a>
-            <a
+            </Link>
+            <Link
               href="#"
               className="flex items-center space-x-2 p-2 text-gray-700 hover:bg-gray-50 rounded-lg"
             >
-              <BarChart3 className="w-5 h-5" />
+              <LucideBarChart3 className="w-5 h-5" />
               <span>Analytics</span>
-            </a>
-            <a
+            </Link>
+            <Link
               href="#"
               className="flex items-center space-x-2 p-2 text-gray-700 hover:bg-gray-50 rounded-lg"
             >
               <Users className="w-5 h-5" />
-              <span>Agents</span>
-              {phoneNumbers[0]}
-            </a>
+              <span className="flex flex-col gap-1">
+                <span>Phone Number</span>
+                {phoneNumbers?.[0]?.phone_number}
+              </span>
+            </Link>
           </nav>
         </div>
       </div>
