@@ -299,6 +299,7 @@ const SettingsPage = () => {
           router("/dashboard");
         } else {
           const errorData = await response.json();
+          console.log(errorData);
 
           // Remove from localStorage if server save fails
           localStorage.removeItem("settings");
