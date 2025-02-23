@@ -16,13 +16,7 @@ import clsx from "clsx";
 
 import { siteConfig } from "@/config/site";
 import { ThemeSwitch } from "@/components/theme-switch";
-import {
-  TwitterIcon,
-  GithubIcon,
-  DiscordIcon,
-  HeartFilledIcon,
-  SearchIcon,
-} from "@/components/icons";
+import { GithubIcon, HeartFilledIcon, SearchIcon } from "@/components/icons";
 import AuthModal from "./AuthModal";
 
 export const Navbar = () => {
@@ -97,7 +91,7 @@ export const Navbar = () => {
           >
             Sponsor
           </Button>
-          <AuthModal/>
+          <AuthModal />
         </NavbarItem>
       </NavbarContent>
 

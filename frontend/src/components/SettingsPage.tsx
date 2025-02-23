@@ -4,7 +4,6 @@ import { Check, ChevronRight, ChevronLeft, ExternalLink } from "lucide-react";
 import { AccordionItem, Accordion } from "@heroui/react";
 import { useNavigate } from "react-router-dom";
 
-
 const SettingsPage = () => {
   const [step, setStep] = useState(0);
   const [formData, setFormData] = useState({
@@ -26,25 +25,8 @@ const SettingsPage = () => {
       togetherKey: "",
     },
   });
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
-  const router = useNavigate();
 
-  const formatEnvData = (formData: any) => {
-    return `
-    SONIC_PRIVATE_KEY=${formData.sonic.privateKey}
-    GOAT_RPC_URL=${formData.goat.rpcUrl}
-    GOAT_PRIVATE_KEY=${formData.goat.privateKey}
-    TWITTER_USER_ID=${formData.twitter.userId}
-    TWITTER_USERNAME=${formData.twitter.username}
-    TWITTER_CONSUMER_KEY=${formData.twitter.consumerKey}
-    TWITTER_CONSUMER_SECRET=${formData.twitter.consumerSecret}
-    TWITTER_ACCESS_TOKEN=${formData.twitter.accessToken}
-    TWITTER_ACCESS_TOKEN_SECRET=${formData.twitter.accessTokenSecret}
-    ALLORA_KEY=${formData.ai.alloraKey}
-    TOGETHER_KEY=${formData.ai.togetherKey}
-    `.trim();
-  };
+  const router = useNavigate();
 
   useEffect(() => {
     // Check if settings exist in localStorage
@@ -100,7 +82,8 @@ const SettingsPage = () => {
                 <li>Create a new project and app</li>
                 <li>Enable OAuth 1.0a with read/write permissions</li>
                 <li>
-                  Copy your API credentials from the &ldquo;Keys and Tokens&ldquo; tab
+                  Copy your API credentials from the &ldquo;Keys and
+                  Tokens&ldquo; tab
                 </li>
               </ol>
             </AccordionItem>
@@ -298,9 +281,6 @@ const SettingsPage = () => {
     if (step < steps.length - 1) {
       setStep(step + 1);
     } else {
-      setIsLoading(true);
-      setError("");
-
       try {
         // Save to localStorage
         localStorage.setItem("settings", JSON.stringify(formData));
@@ -319,22 +299,14 @@ const SettingsPage = () => {
           router("/dashboard");
         } else {
           const errorData = await response.json();
-          setError(
-            errorData.message ||
-              "Failed to save environment variables. Please try again."
-          );
+
           // Remove from localStorage if server save fails
           localStorage.removeItem("settings");
         }
       } catch (error) {
-        setError(
-          "An error occurred while saving settings. Please check your connection and try again."
-        );
         console.error("Error:", error);
         // Remove from localStorage if server save fails
         localStorage.removeItem("settings");
-      } finally {
-        setIsLoading(false);
       }
     }
   };
@@ -348,8 +320,14 @@ const SettingsPage = () => {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-4 flex justify-center items-center">Setup Your AI Assistant</h1>
-        <Progress value={(step + 1) * (100 / steps.length)} className="h-2" color="warning"/>
+        <h1 className="text-3xl font-bold mb-4 flex justify-center items-center">
+          Setup Your AI Assistant
+        </h1>
+        <Progress
+          value={(step + 1) * (100 / steps.length)}
+          className="h-2"
+          color="warning"
+        />
       </div>
 
       <div className="flex gap-4 mb-8">

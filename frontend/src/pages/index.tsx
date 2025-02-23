@@ -22,7 +22,15 @@ export default function IndexPage() {
             💡 Load Agents. Manage Crypto. Automate Tasks. Get Advice.
           </p>
           <div className="flex flex-row gap-4 mt-6">
-            <OnboardingModal />
+            <Button
+              as={Link}
+              href="/#"
+              variant="bordered"
+              size="lg"
+              className="font-semibold"
+            >
+              Get Started
+            </Button>
             <Button
               as={Link}
               href="/demo"
