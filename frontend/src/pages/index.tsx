@@ -4,7 +4,6 @@ import DefaultLayout from "@/layouts/default";
 
 import { Button } from "@heroui/button";
 import { Card, CardBody, Image } from "@heroui/react";
-import OnboardingModal from "@/components/OnboardingModal";
 import { LucidePhoneCall, LucidePizza, LucideRadioTower } from "lucide-react";
 
 export default function IndexPage() {
