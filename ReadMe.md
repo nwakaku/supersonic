@@ -1,4 +1,4 @@
-## **🔹 SuperSonic: Where YOU can talk to your own personalized blockchain assistant. (Retell AI + ZerePy)**  
+## **🔹 SuperSonic: Where YOU can talk to your own personalized blockchain account. (Retell AI + ZerePy)**  
 
 ### **🚀 Inspiration**  
 Access to financial services remains a global challenge, with **1.7 billion people still unbanked**. Traditional banking requires internet access, digital literacy, and physical infrastructure—barriers that exclude many underserved populations.  
