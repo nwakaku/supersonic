@@ -9,15 +9,16 @@ import { LucidePhoneCall, LucidePizza, LucideRadioTower } from "lucide-react";
 export default function IndexPage() {
   return (
     <DefaultLayout>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center py-4 h-screen">
-        <section className="flex flex-col justify-center">
-          <h1 className="text-6xl font-extrabold tracking-tighter md:text-7xl">
+      {/* Hero Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center py-16 bg-gray-50 rounded-sm">
+        <section className="flex flex-col justify-center px-8">
+          <h1 className="text-6xl font-extrabold tracking-tighter md:text-7xl text-gray-900">
             Talk to AI Like <span className="text-warning">Never Before</span>
           </h1>
-          <h2 className="text-2xl font-normal tracking-tight text-muted-foreground mt-4">
+          <h2 className="text-2xl font-normal tracking-tight text-gray-600 mt-4">
             Your Blockchain & AI Assistant—Just a Phone Call Away
           </h2>
-          <p className="mt-4 text-lg">
+          <p className="mt-4 text-lg text-gray-700">
             💡 Load Agents. Manage Crypto. Automate Tasks. Get Advice.
           </p>
           <div className="flex flex-row gap-4 mt-6">
@@ -26,7 +27,7 @@ export default function IndexPage() {
               href="/settings"
               variant="solid"
               size="lg"
-              className="font-semibold bg-warning"
+              className="font-semibold bg-warning hover:bg-warning/90 text-white"
             >
               Get Started
             </Button>
@@ -35,53 +36,53 @@ export default function IndexPage() {
               href="/demo"
               variant="bordered"
               size="lg"
-              className="font-semibold"
+              className="font-semibold text-gray-700 border-gray-700 hover:bg-gray-100"
             >
               Watch Demo
             </Button>
           </div>
         </section>
-        <section className="flex flex-col items-center justify-center">
+        <section className="flex flex-col items-center justify-center px-8">
           <Image
             alt="AI Phone Assistant"
-            className="w-full rounded-lg object-cover"
+            className="w-full rounded-lg object-cover shadow-lg"
             height={400}
             src="/flipgrammy.jpg"
             width={680}
           />
-          <p>Even Your Granny can use it.</p>
+          <p className="mt-4 text-gray-600">Even Your Granny can use it.</p>
         </section>
       </div>
 
-      {/* How It Works */}
-      <div className="mt-8">
+      {/* How It Works Section */}
+      <div className="mt-16 bg-gray-100 py-16 rounded-sm">
         <h2 className="text-4xl text-warning font-bold mb-8 text-center">
           How It Works
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <Card className="p-4">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 px-8">
+          <Card className="p-6 bg-white shadow-md hover:shadow-lg transition-shadow">
             <CardBody>
-              <span className="flex item-center gap-2 mb-4">
-                <LucidePizza />{" "}
-                <h3 className="text-2xl font-semibold  ">
+              <span className="flex items-center gap-2 mb-4">
+                <LucidePizza className="text-gray-700" />
+                <h3 className="text-2xl font-semibold text-gray-800">
                   Get Your AI Phone Agent
                 </h3>
               </span>
-
-              <ul className="list-disc list-inside space-y-2">
+              <ul className="list-disc list-inside space-y-2 text-gray-600">
                 <li>Instantly create your phone assistant.</li>
                 <li>Purchase and configure your custom number</li>
               </ul>
             </CardBody>
           </Card>
-          <Card className="p-4">
+          <Card className="p-6 bg-white shadow-md hover:shadow-lg transition-shadow">
             <CardBody>
-              <span className="flex item-center gap-2 mb-4">
-                <LucideRadioTower />
-                <h3 className="text-2xl font-semibold ">Connect & Customize</h3>
+              <span className="flex items-center gap-2 mb-4">
+                <LucideRadioTower className="text-gray-700" />
+                <h3 className="text-2xl font-semibold text-gray-800">
+                  Connect & Customize
+                </h3>
               </span>
-
-              <ul className="list-disc list-inside space-y-2">
+              <ul className="list-disc list-inside space-y-2 text-gray-600">
                 <li>
                   Seamlessly integrate with Twitter, blockchain networks, and AI
                   functions
@@ -90,14 +91,15 @@ export default function IndexPage() {
               </ul>
             </CardBody>
           </Card>
-          <Card className="p-4">
+          <Card className="p-6 bg-white shadow-md hover:shadow-lg transition-shadow">
             <CardBody>
-              <span className="flex item-center gap-2 mb-4">
-                <LucidePhoneCall />
-                <h3 className="text-2xl font-semibold "> Call & Command</h3>
+              <span className="flex items-center gap-2 mb-4">
+                <LucidePhoneCall className="text-gray-700" />
+                <h3 className="text-2xl font-semibold text-gray-800">
+                  Call & Command
+                </h3>
               </span>
-
-              <ul className="list-disc list-inside space-y-2">
+              <ul className="list-disc list-inside space-y-2 text-gray-600">
                 <li>Manage blockchain tasks</li>
                 <li>Start & stop AI agents</li>
                 <li>Get financial insights</li>
@@ -108,72 +110,84 @@ export default function IndexPage() {
         </div>
       </div>
 
-      {/* Who is this for */}
-      <div className="mt-16">
-        <h2 className="text-4xl font-bold mb-8 text-center">
+      {/* Who Is This For Section */}
+      <div className="mt-16 bg-gray-50 py-16 rounded-sm">
+        <h2 className="text-4xl font-bold mb-8 text-center text-gray-900">
           Who Is This For?
         </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <Card className="p-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 px-8">
+          <Card className="p-6 bg-white shadow-md hover:shadow-lg transition-shadow">
             <CardBody>
-              <h3 className="text-xl font-semibold mb-4">
+              <h3 className="text-xl font-semibold mb-4 text-gray-800">
                 ✅ Crypto Enthusiasts
               </h3>
-              <p>Manage your blockchain transactions hands-free</p>
+              <p className="text-gray-600">
+                Manage your blockchain transactions hands-free
+              </p>
             </CardBody>
           </Card>
-          <Card className="p-4">
+          <Card className="p-6 bg-white shadow-md hover:shadow-lg transition-shadow">
             <CardBody>
-              <h3 className="text-xl font-semibold mb-4">✅ Senior Citizens</h3>
-              <p>Simplified AI for effortless interactions</p>
+              <h3 className="text-xl font-semibold mb-4 text-gray-800">
+                ✅ Senior Citizens
+              </h3>
+              <p className="text-gray-600">
+                Simplified AI for effortless interactions
+              </p>
             </CardBody>
           </Card>
-          <Card className="p-4">
+          <Card className="p-6 bg-white shadow-md hover:shadow-lg transition-shadow">
             <CardBody>
-              <h3 className="text-xl font-semibold mb-4">
+              <h3 className="text-xl font-semibold mb-4 text-gray-800">
                 ✅ Students & Entrepreneurs
               </h3>
-              <p>Quick financial insights & automation</p>
+              <p className="text-gray-600">
+                Quick financial insights & automation
+              </p>
             </CardBody>
           </Card>
-          <Card className="p-4">
+          <Card className="p-6 bg-white shadow-md hover:shadow-lg transition-shadow">
             <CardBody>
-              <h3 className="text-xl font-semibold mb-4">
+              <h3 className="text-xl font-semibold mb-4 text-gray-800">
                 ✅ Rural Farmers & Business Owners
               </h3>
-              <p>Get blockchain access without internet hassles</p>
+              <p className="text-gray-600">
+                Get blockchain access without internet hassles
+              </p>
             </CardBody>
           </Card>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center py-4 h-screen">
-        <section className="flex flex-col items-center justify-center">
+      {/* AI That Listens Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center py-16 mt-16 bg-gray-100 rounded-sm">
+        <section className="flex flex-col items-center justify-center px-8">
           <Image
             alt="AI Phone Assistant"
-            className="w-full rounded-lg object-cover"
+            className="w-full rounded-lg object-cover shadow-lg"
             height={400}
             src="https://cdn.dribbble.com/userupload/17524831/file/original-056cb479253bdd985448ac8dcff70dab.jpg?resize=1024x768&vertical=center"
             width={680}
           />
-          <p>Even Your Granny can use it.</p>
+          <p className="mt-4 text-gray-600">Even Your Granny can use it.</p>
         </section>
-        {/* AI That Listens Section */}
-        <div className="mt-16 text-center">
-          <h2 className="text-4xl font-bold mb-4">
+        <div className="mt-16 text-center px-8">
+          <h2 className="text-4xl font-bold mb-4 text-gray-900">
             📞 AI That Listens & Executes
           </h2>
-          <p className="text-xl mb-8">
+          <p className="text-xl mb-8 text-gray-600">
             No apps. No typing. Just talk to your assistant and get things done
             in seconds.
           </p>
         </div>
       </div>
 
-      {/* Call to Action */}
-      <div className="mt-16 text-center">
-        <h2 className="text-4xl font-bold mb-4">⚡ Get Started Today!</h2>
-        <p className="text-xl mb-8">
+      {/* Call to Action Section */}
+      <div className="mt-16 text-center bg-gray-50 py-16 rounded-sm">
+        <h2 className="text-4xl font-bold mb-4 text-gray-900">
+          ⚡ Get Started Today!
+        </h2>
+        <p className="text-xl mb-8 text-gray-600">
           Set up your AI phone agent in minutes and make your first call
         </p>
         <div className="flex justify-center gap-4">
@@ -182,7 +196,7 @@ export default function IndexPage() {
             href="/signup"
             color="primary"
             size="lg"
-            className="font-semibold"
+            className="font-semibold bg-warning hover:bg-warning/90 text-white"
           >
             Create Your AI Assistant Now
           </Button>
@@ -191,7 +205,7 @@ export default function IndexPage() {
             href="/learn-more"
             variant="bordered"
             size="lg"
-            className="font-semibold"
+            className="font-semibold text-gray-700 border-gray-700 hover:bg-gray-100"
           >
             Learn More
           </Button>

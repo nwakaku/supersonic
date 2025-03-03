@@ -25,14 +25,19 @@ export const AuthModal = () => {
   const [userProfile, setUserProfile] = useState(null);
   const navigate = useNavigate();
 
+  // Fetch session and user profile on component mount
   useEffect(() => {
-    // Get initial session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    const fetchSession = async () => {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
       setSession(session);
       if (session?.user) {
-        fetchUserProfile(session.user.id);
+        await fetchUserProfile(session.user.id);
       }
-    });
+    };
+
+    fetchSession();
 
     // Set up auth state change listener
     const {
@@ -51,6 +56,7 @@ export const AuthModal = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
+  // Fetch user profile from Supabase
   const fetchUserProfile = async (userId) => {
     const { data, error } = await supabase
       .from("profiles")
@@ -63,11 +69,14 @@ export const AuthModal = () => {
     }
   };
 
+  // Handle sign out
   const handleSignOut = async () => {
+    console.log("logout");
     await supabase.auth.signOut();
     navigate("/");
   };
 
+  // Render user dropdown if logged in
   if (session?.user) {
     return (
       <Dropdown>
@@ -88,17 +97,17 @@ export const AuthModal = () => {
           </Button>
         </DropdownTrigger>
         <DropdownMenu aria-label="User menu">
-          <DropdownItem key="profile" onClick={() => navigate("/dashboard")}>
+          <DropdownItem key="profile" onPress={() => navigate("/dashboard")}>
             Dashboard
           </DropdownItem>
-          <DropdownItem key="settings" onClick={() => navigate("/settings")}>
+          <DropdownItem key="settings" onPress={() => navigate("/settings")}>
             Settings
           </DropdownItem>
           <DropdownItem
             key="logout"
             className="text-danger"
             color="danger"
-            onClick={handleSignOut}
+            onPress={handleSignOut}
           >
             Log Out
           </DropdownItem>
@@ -107,6 +116,7 @@ export const AuthModal = () => {
     );
   }
 
+  // Render sign-in button and modal if not logged in
   return (
     <>
       <Button
